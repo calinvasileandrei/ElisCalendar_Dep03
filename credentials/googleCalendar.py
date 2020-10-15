@@ -9,8 +9,7 @@ import time
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar',"https://www.googleapis.com/auth/calendar.events"]
-calendarID= "6esvbg4rdj44egpni2r65kohjs@group.calendar.google.com"
-
+calendarID= "h9i2ija6t1g1me2vgrmq6afhfg@group.calendar.google.com"
 
 def getConn():
     """Shows basic usage of the Google Calendar API.
@@ -82,33 +81,35 @@ def insertEvent(service,subject,startDateTime,endDateTime):
             time.sleep(4)#if something happens stop for 4 seconds , let the api refresh the time counter
     print('Event created: %s' % (event.get('htmlLink')))
 
-def insertListEvent(service,listEvents):
+def insertListEvent(listEvents):
+    service = getConn()
     addedEvents=0
-    print("Time Extimated: ",round(len(listEvents)/3),"seconds")
+    print("\n\nTime Extimated: ",round(len(listEvents)/3),"seconds")
     for event in listEvents:
-        time.sleep(0.3)
-        event = {
-            'summary': event["Subject"],
-            'start': {
-                'dateTime': event["StartDateTime"],
-                'timeZone': 'Europe/Rome',
-            },
-            'end': {
-                'dateTime': event["EndDateTime"],
-                'timeZone': 'Europe/Rome',
-            },
-        }
-        insEvent = True
-        while insEvent==False:
-            try:
-                event = service.events().insert(calendarId=calendarID, body=event).execute()
-                insEvent=True
-            except:
-                print(datetime.datetime.now()," Error insert in calendar: ",calendarID,": Event:",event)
-                insEvent= False
-                time.sleep(4)#if something happens stop for 4 seconds , let the api refresh the time counter
-        addedEvents+=1
-        print(addedEvents,"/",len(listEvents),' - Event created: %s' % (event.get('htmlLink')))
+        if(not event["Subject"] == "x"):
+            time.sleep(0.3)
+            event = {
+                'summary': event["Subject"],
+                'start': {
+                    'dateTime': event["StartDateTime"],
+                    'timeZone': 'Europe/Rome',
+                },
+                'end': {
+                    'dateTime': event["EndDateTime"],
+                    'timeZone': 'Europe/Rome',
+                },
+            }
+            insEvent = True
+            while insEvent==True :
+                try:
+                    new_event = service.events().insert(calendarId=calendarID, body=event).execute()
+                    insEvent=False
+                except:
+                    print(datetime.datetime.now()," Error insert in calendar: ",calendarID,": Event:",event)
+                    insEvent= True
+                    time.sleep(4)#if something happens stop for 4 seconds , let the api refresh the time counter
+            addedEvents+=1
+            print(addedEvents,"/",len(listEvents),' - Event created: %s' % (new_event.get('htmlLink')))
     print("Total Events to add:",len(listEvents)," , Events added:",addedEvents)
 
 
@@ -125,16 +126,16 @@ def clearCalendar(service):
     if not events:
         print('No events found.')
     for event in events:
-        time.sleep(0.3)
+        time.sleep(0.1)
         print(i,event["id"])
         delEvent = True
-        while delEvent==False:
+        while delEvent==True:
             try:
-                service.events().delete(calendarId=calendarID, eventId=event["id"]).execute()
-                delEvent=True
+                delev =service.events().delete(calendarId=calendarID, eventId=event["id"]).execute()
+                delEvent=False
             except:
                 print(datetime.datetime.now()," Error deleting from calendar: ",calendarID,": Event:",event)
-                delEvent=False
+                delEvent=True
                 time.sleep(4)#if something happens stop for 4 seconds , let the api refresh the time counter
         i+=1
     print("Elementi esistenti:",eventslength," , Elementi eliminati : ",i)

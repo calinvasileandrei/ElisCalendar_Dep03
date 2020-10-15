@@ -85,9 +85,10 @@ def googleOps(): #google calendar operations
     #If true skip the update
     #IF not update
     print("Elementi Totali : ",len(listEventi))
+    #myCalendar.clearCalendar(myCalendar.getConn())
     indexFrom = myCalendar.clearCalendarFromToday(myCalendar.getConn()) #clear all the events
     #print(listEventi[indexFrom:])
-    myCalendar.insertListEvent(myCalendar.getConn(), listEventi[indexFrom:]) #add all the events
+    myCalendar.insertListEvent(listEventi[indexFrom:]) #add all the events
 
 
 if __name__ == '__main__':
