@@ -9,7 +9,7 @@ from credentials import googleCalendar as myCalendar
 #WebSSL certificates
 ssl._create_default_https_context = ssl._create_unverified_context
 #download the xlsx file from the link
-link = "https://cedelcloud-my.sharepoint.com/:x:/g/personal/i_colosimo_elis_org/EUvKVPC9g_5Ni2LKpC54IgoBFQzO1E6dU2IB8wnSIjU9fw?download=1"
+link = "https://cedelcloud-my.sharepoint.com/:x:/g/personal/g_tomeno_elis_org/EdfyxBa5gSFNivc2-aj7G0IB48bm609wlXrkbQc7ITLoww?download=1"
 
 #Defining vars
 listEventi = []
@@ -29,12 +29,12 @@ def getList():
     namesSheets = wb.sheet_names()
     sheetIndex=0
     for name in namesSheets:
-        if(name == "1 annoLeone" ):
+        if(name == "2 anno AA 20-21" ):
             break
         else:
             sheetIndex+=1
 
-    print("Sheet 1 annoLeone index:",sheetIndex)
+    print("Sheet 2 anno AA 20-21 index:",sheetIndex)
 
     #select the index of the sheet
     sheet = wb.sheet_by_index(sheetIndex)
@@ -42,20 +42,20 @@ def getList():
     # the first month of the calendar, 10 = october
     startMonth = 10
     # select the year
-    startYear = 2019
+    startYear = 2020
 
     #the number of the month in the exel file
     monthNumber = 10
-    hourNumber = 8
+    hourNumber = 7
 
     for z in range(0, monthNumber): #for each month = z
-        currentColumnMonth = z * 11
+        currentColumnMonth = z * 10
         if (startMonth == 13): #startMonth is a int and when it goes over 12 i need to reset the year
             startMonth = 1
             startYear += 1
 
         for i in range(sheet.nrows): # i= row
-            if (i != 0): # i need to skip the first blank row
+            if (i != 0 and i<35): # i need to skip the first blank row and 
                 if (sheet.cell_value(i, currentColumnMonth) != ""): #check the value if it is not null
                     dataNum = int(sheet.cell_value(i, currentColumnMonth))
                     completeData = [int(startYear),int(startMonth),int(dataNum)]
@@ -86,6 +86,7 @@ def googleOps(): #google calendar operations
     #IF not update
     print("Elementi Totali : ",len(listEventi))
     indexFrom = myCalendar.clearCalendarFromToday(myCalendar.getConn()) #clear all the events
+    #print(listEventi[indexFrom:])
     myCalendar.insertListEvent(myCalendar.getConn(), listEventi[indexFrom:]) #add all the events
 
 
