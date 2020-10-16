@@ -59,6 +59,19 @@ def printEvents(resoultNumber=999999):
 
 
 
+def getEvents():
+    service = getConn()
+    # Call the Calendar API for events
+    now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    try:
+        events_result = service.events().list(calendarId=calendarID,maxResults=99999, singleEvents=True,orderBy='startTime').execute()
+    except:
+        print(datetime.datetime.now()," Error getting events list !")
+
+    events = events_result.get('items', [])
+    return events
+
+
 def insertEvent(subject,startDateTime,endDateTime):
     service = getConn()
     event = { #setting up the obj event
@@ -103,6 +116,30 @@ def insertListEvent(listEvents):
     print("Total Events to add:",len(listEvents)," , Events added:",addedEvents, " , Null events: "+str(null_events))
 
 
+
+def clearCalendarFromList(events_to_delete):
+    service = getConn()
+    i=0
+    eventslength = len(events_to_delete)
+    for event in events_to_delete:
+        time.sleep(0.1)
+        print("Event: ", i, "/", len(events_to_delete), "Event id: ", event["id"])
+        delEvent = True
+        num_retry = 0
+        while delEvent == True:
+            try:
+                delev = service.events().delete(calendarId=calendarID, eventId=event["id"]).execute()
+                delEvent = False
+            except Exception as er:
+                num_retry += 1
+                print(datetime.datetime.now(), " Error deleting from calendar: ", calendarID, ": Err:", er)
+                if (num_retry >= 3):
+                    delEvent = False
+                else:
+                    delEvent = True
+                time.sleep(4)  # if something happens stop for 4 seconds , let the api refresh the time counter
+        i += 1
+    print("Elementi da eliminare:", eventslength, " , Elementi eliminati : ", i)
 
 def clearCalendar(service):
     i=0

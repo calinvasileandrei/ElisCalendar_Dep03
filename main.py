@@ -5,6 +5,7 @@ import time
 import requests
 import ssl
 from credentials import googleCalendar as myCalendar
+import json
 
 #WebSSL certificates
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -73,32 +74,81 @@ def getList():
                         startDateTime = datetime.datetime(int(completeData[0]),int(completeData[1]),int(completeData[2]),int(startTime[0]),int(startTime[1]),0).strftime("%Y-%m-%dT%H:%M:%S")
                         endDateTime = datetime.datetime(int(completeData[0]),int(completeData[1]),int(completeData[2]),int(endTime[0]),int(endTime[1])+1,0).strftime("%Y-%m-%dT%H:%M:%S")
 
-                        if (subject): # i there is a subject i add the event
+                        if (subject and subject!="x"): # i there is a subject i add the event
                             listEventi.append({"Subject":subject, "StartDateTime":startDateTime,"EndDateTime":endDateTime})
                         j += 1 # i move a column further for getting the next hour
         startMonth += 1 # increment the int month counter
 
+def elementExists(event,google_list):
+    for google_event in google_list:
+        if(event["Subject"]==google_event["Subject"] and event["StartDateTime"]==google_event["StartDateTime"] and event["EndDateTime"]==google_event["EndDateTime"]):
+            return True
+    return False
+
+def removeElementGoogleList(event_to_remove,new_google_list):
+    for event_google in new_google_list:
+        if(event_to_remove["Subject"]==event_google["Subject"] and event_to_remove["StartDateTime"]==event_google["StartDateTime"] and event_to_remove["EndDateTime"]==event_google["EndDateTime"]):
+            new_google_list.remove(event_google)
+
+    return new_google_list
+
+def updateList(updated_list_events):
+    # get the list from google and restructure for a fast match
+    list_events_google = myCalendar.getEvents()
+    new_google_list = []
+    for event in list_events_google:
+        new_google_list.append({"Subject": event["summary"], "StartDateTime": event["start"]["dateTime"][:-6],
+                                "EndDateTime": event["end"]["dateTime"][:-6],"id":event["id"]})
+    # now i have 2 list one is: updated_list_events  and the other is new_google_list
+
+    element_to_add = []
+
+    for event in updated_list_events:
+        if elementExists(event,new_google_list):
+            removeElementGoogleList(event,new_google_list) # if i find the element i remove from the google list
+            # in the google list will remain only the elements to delete
+        else:
+            element_to_add.append(event)  # add the events which doesn't exists
+
+    element_to_delete = new_google_list  # all the items which remain in the list need to be deleteid
+
+    print("ELEMENT TO DELETE: [\n", element_to_delete, "\n\n]")
+    if(len(element_to_delete)>0):
+        myCalendar.clearCalendarFromList(element_to_delete)
+    else:
+        print("List is up-to date, no event need to be deleted")
+
+    print("ELEMENT TO ADD: [\n", element_to_add, "\n\n]")
+    if(len(element_to_add) >0):
+        myCalendar.insertListEvent(element_to_add)
+    else:
+        print("List is up-to date, no element need to be added")
+
 
 def googleOps(): #google calendar operations
     getList()
+    updateList(listEventi)
     #should i check if the new update has the same event list of the last one
     #If true skip the update
     #IF not update
-    print("Elementi Totali : ",len(listEventi))
-    myCalendar.clearCalendar(myCalendar.getConn())
-    indexFrom = myCalendar.clearCalendarFromToday(myCalendar.getConn()) #clear all the events
-    #print(listEventi[indexFrom:])
-    myCalendar.insertListEvent(listEventi[indexFrom:]) #add all the events
+    #print("Elementi Totali : ",len(listEventi))
+    #myCalendar.clearCalendar(myCalendar.getConn())
+    #indexFrom = myCalendar.clearCalendarFromToday(myCalendar.getConn()) #clear all the events
+    #myCalendar.insertListEvent(listEventi[indexFrom:]) #add all the events
 
 
 if __name__ == '__main__':
      #I should add a check if all events already exists
      #IF not i should add all of them
      #IF exists I should update only the newest
-     while True:
-        print("Elis calendar Update: ",datetime.datetime.now())
-        googleOps()
-        print("Elis calendar Finish Update: ",datetime.datetime.now())
-        time.sleep(86400) #every day repeat
+     #while True:
+
+
+
+     print("Elis calendar Update: ",datetime.datetime.now())
+     googleOps()
+     print("Elis calendar Finish Update: ",datetime.datetime.now())
+        #time.sleep(86400) #every day repeat
+
   
 
